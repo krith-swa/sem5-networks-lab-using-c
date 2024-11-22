@@ -1,0 +1,427 @@
+set ns [new Simulator]
+
+$ns color 1 Blue
+$ns color 2 Red
+
+set nf [open out.nam w]
+$ns namtrace-all $nf
+
+proc finish {} {
+	global ns nf
+	$ns flush-trace
+	
+	close $nf
+
+	exec nam out.nam &
+	exit 0
+}
+
+set n0 [$ns node]
+set n1 [$ns node]
+set n2 [$ns node]
+set n3 [$ns node]
+
+$ns duplex-link $n0 $n2 2Mb 10ms DropTail
+$ns duplex-link $n1 $n2 2Mb 10ms DropTail
+$ns duplex-link $n2 $n3 1.7Mb 20ms DropTail
+
+$ns queue-limit $n2 $n3 10
+
+$ns duplex-link-op $n0 $n2 orient right-down
+$ns duplex-link-op $n1 $n2 orient right-up
+$ns duplex-link-op $n2 $n3 orient right
+
+$ns duplex-link-op $n2 $n3 queuePos 0.5
+
+set tcp [new Agent/TCP]
+$tcp set class_ 2
+$ns attach-agent $n0 $tcp
+set sink [new Agent/TCPSink]
+$ns attach-agent $n3 $sink
+$ns connect $tcp $sink
+$tcp set fid_ 1
+
+set ftp [new Application/FTP]
+$ftp attach-agent $tcp
+$ftp set type_ FTP
+
+set udp [new Agent/UDP]
+$ns attach-agent $n1 $udp
+set null [new Agent/Null]
+$ns attach-agent $n3 $null
+$ns connect $udp $null
+$udp set fid_ 2
+
+set cbr [new Application/Traffic/CBR]
+$cbr attach-agent $udp
+$cbr set type_ CBR
+$cbr set packet_size_ 1000
+$cbr set rate_ 1mb
+$cbr set random_ false
+
+$ns at 0.1 "$cbr start"
+$ns at 1.0 "$ftp start"
+$ns at 4.0 "$ftp stop"
+$ns at 4.5 "$cbr stop"
+
+$ns at 4.5 "$ns detach-agent $n0 $tcp; $ns detach-agent $n3 $sink"
+
+$ns at 5.0 "finish"
+
+puts "CBR packet size = [$cbr set packet_size_]"
+puts "CBR interval = [$cbr set interval_]"
+
+$ns run
+
+
+
+set ns [new Simulator]
+
+$ns color 1 Blue
+$ns color 2 Red
+
+set nf [open out.nam w]
+$ns namtrace-all $nf
+
+proc finish {} {
+	global ns nf
+	$ns flush-trace
+
+	close $nf
+	
+	exec nam out.nam &
+	exit 0
+}
+
+set n0 [$ns node]
+set n1 [$ns node]
+set n2 [$ns node]
+
+$ns duplex-link $n0 $n1 10Mb 10ms DropTail
+$ns duplex-link $n1 $n2 2Mb 10ms DropTail
+
+$ns queue-limit $n1 $n2 10
+
+$ns duplex-link-op $n0 $n1 orient right
+$ns duplex-link-op $n1 $n2 orient right
+
+set tcp [new Agent/TCP]
+$tcp set class_ 2
+$ns attach-agent $n0 $tcp
+set sink [new Agent/TCPSink]
+$ns attach-agent $n2 $sink
+$ns connect $tcp $sink
+
+$tcp set packet_size_ 1000
+$tcp set window_ 65000
+$tcp set fid_ 1
+
+set cbr [new Application/Traffic/CBR]
+$cbr set packet_size_ 500
+$cbr set interval_ 0.0001
+$cbr attach-agent $tcp
+
+$ns at 0.1 "$cbr start"
+$ns at 4.5 "$cbr stop"
+
+$ns at 4.5 "$ns detach-agent $n0 $tcp; $ns detach-agent $n2 $sink"
+
+$ns at 5.0 "finish"
+
+$ns run
+
+
+
+
+set ns [new Simulator]
+
+$ns color 1 Blue
+$ns color 2 Red
+
+set nf [open out.nam w]
+$ns namtrace-all $nf
+
+proc finish {} {
+	global ns nf
+	$ns flush-trace
+
+	close $nf
+	
+	exec nam out.nam &
+	exit 0
+}
+
+set n0 [$ns node]
+set n1 [$ns node]
+set n2 [$ns node]
+
+$ns duplex-link $n0 $n1 10Mb 10ms DropTail
+$ns duplex-link $n1 $n2 2Mb 10ms DropTail
+
+$ns queue-limit $n1 $n2 10
+
+$ns duplex-link-op $n0 $n1 orient right
+$ns duplex-link-op $n1 $n2 orient right
+
+set tcp [new Agent/TCP/Reno]
+$tcp set class_ 2
+$ns attach-agent $n0 $tcp
+set sink [new Agent/TCPSink]
+$ns attach-agent $n2 $sink
+$ns connect $tcp $sink
+
+$tcp set packet_size_ 1000
+$tcp set window_ 65000
+$tcp set fid_ 1
+
+set cbr [new Application/Traffic/CBR]
+$cbr set packet_size_ 500
+$cbr set interval_ 0.0001
+$cbr attach-agent $tcp
+
+$ns at 0.1 "$cbr start"
+$ns at 4.5 "$cbr stop"
+
+$ns at 4.5 "$ns detach-agent $n0 $tcp; $ns detach-agent $n2 $sink"
+
+$ns at 5.0 "finish"
+
+$ns run
+
+
+
+
+set ns [new Simulator]
+
+$ns color 1 Blue
+$ns color 2 Red
+
+set nf [open out.nam w]
+$ns namtrace-all $nf
+
+proc finish {} {
+	global ns nf
+	$ns flush-trace
+	
+	close $nf
+
+	exec nam out.nam &
+	exit 0	
+}
+
+set n(0) [$ns node]
+set n(1) [$ns node]
+set n(2) [$ns node]
+set n(3) [$ns node]
+
+for {set i 0} {$i < 3} {incr i} {
+	$ns duplex-link $n($i) $n([expr $i+1]) 1Mb 10ms DropTail
+}
+$ns duplex-link $n(0) $n(3) 1Mb 10ms DropTail
+$ns duplex-link $n(1) $n(3) 1Mb 10ms DropTail
+
+$ns duplex-link-op $n(0) $n(1) orient right
+$ns duplex-link-op $n(1) $n(2) orient down
+$ns duplex-link-op $n(2) $n(3) orient left
+$ns duplex-link-op $n(3) $n(0) orient up
+$ns duplex-link-op $n(1) $n(3) orient left-down
+
+set udp1 [new Agent/UDP]
+$ns attach-agent $n(0) $udp1
+set null [new Agent/Null]
+$ns attach-agent $n(3) $null
+$ns connect $udp1 $null
+$udp1 set fid_ 1
+
+set udp2 [new Agent/UDP]
+$ns attach-agent $n(1) $udp2
+set null [new Agent/Null]
+$ns attach-agent $n(3) $null
+$ns connect $udp2 $null
+$udp2 set fid_ 2
+
+set cbr1 [new Application/Traffic/CBR]
+$cbr1 attach-agent $udp1
+$cbr1 set type_ CBR
+$cbr1 set packet_size_ 1000
+$cbr1 set rate_ 1mb
+$cbr1 set random_ false
+
+set cbr2 [new Application/Traffic/CBR]
+$cbr2 attach-agent $udp2
+$cbr2 set type_ CBR
+$cbr2 set packet_size_ 1000
+$cbr2 set rate_ 1mb
+$cbr2 set random_ false
+
+$ns rtproto DV
+
+$ns rtmodel-at 1.0 down $n(1) $n(3)
+$ns rtmodel-at 2.0 up $n(1) $n(3)
+
+$ns at 0.1 "$cbr1 start"
+$ns at 0.2 "$cbr2 start"
+$ns at 4.5 "$ns detach-agent $n(0) $udp1; $ns detach-agent $n(3) $null; $ns detach-agent $n(1) $udp2"
+$ns at 5.0 "finish"
+
+$ns run
+
+
+
+
+
+set ns [new Simulator]
+
+$ns color 1 Blue
+$ns color 2 Red
+
+set nf [open out.nam w]
+$ns namtrace-all $nf
+
+proc finish {} {
+	global ns nf
+	$ns flush-trace
+	
+	close $nf
+
+	exec nam out.nam &
+	exit 0	
+}
+
+set n(0) [$ns node]
+set n(1) [$ns node]
+set n(2) [$ns node]
+set n(3) [$ns node]
+
+for {set i 0} {$i < 3} {incr i} {
+	$ns duplex-link $n($i) $n([expr $i+1]) 1Mb 10ms DropTail
+}
+$ns duplex-link $n(0) $n(3) 1Mb 10ms DropTail
+$ns duplex-link $n(1) $n(3) 1Mb 10ms DropTail
+
+$ns duplex-link-op $n(0) $n(1) orient right
+$ns duplex-link-op $n(1) $n(2) orient down
+$ns duplex-link-op $n(2) $n(3) orient left
+$ns duplex-link-op $n(3) $n(0) orient up
+$ns duplex-link-op $n(1) $n(3) orient left-down
+
+set tcp1 [new Agent/TCP]
+$ns attach-agent $n(0) $tcp1
+set sink [new Agent/TCPSink]
+$ns attach-agent $n(3) $sink
+$ns connect $tcp1 $sink
+$tcp1 set fid_ 1
+
+set tcp2 [new Agent/TCP]
+$ns attach-agent $n(1) $tcp2
+set sink [new Agent/TCPSink]
+$ns attach-agent $n(3) $sink
+$ns connect $tcp2 $sink
+$tcp2 set fid_ 2
+
+set cbr1 [new Application/Traffic/CBR]
+$cbr1 attach-agent $tcp1
+$cbr1 set type_ CBR
+$cbr1 set packet_size_ 1000
+$cbr1 set rate_ 1mb
+$cbr1 set random_ false
+
+set cbr2 [new Application/Traffic/CBR]
+$cbr2 attach-agent $tcp2
+$cbr2 set type_ CBR
+$cbr2 set packet_size_ 1000
+$cbr2 set rate_ 1mb
+$cbr2 set random_ false
+
+$ns rtproto LS
+
+$ns rtmodel-at 1.0 down $n(1) $n(3)
+$ns rtmodel-at 2.0 up $n(1) $n(3)
+
+$ns at 0.1 "$cbr1 start"
+$ns at 0.2 "$cbr2 start"
+$ns at 4.5 "$ns detach-agent $n(0) $tcp1; $ns detach-agent $n(3) $sink; $ns detach-agent $n(1) $tcp2"
+$ns at 5.0 "finish"
+
+$ns run
+
+
+
+
+set ns [new Simulator]
+
+$ns color 1 Blue
+$ns color 2 Red
+
+set nf [open out.nam w]
+$ns namtrace-all $nf
+
+proc finish {} {
+	global ns nf
+	$ns flush-trace
+
+	close $nf
+
+	exec nam out.nam &
+	exit 0
+}
+
+set n0 [$ns node]
+set n1 [$ns node]
+set n2 [$ns node]
+set n3 [$ns node]
+set n4 [$ns node]
+set n5 [$ns node]
+
+$ns duplex-link $n0 $n2 10Mb 10ms DropTail
+$ns duplex-link $n1 $n2 10Mb 10ms DropTail
+$ns simplex-link $n2 $n3 0.3Mb 100ms DropTail
+$ns simplex-link $n3 $n2 0.3Mb 100ms DropTail
+$ns duplex-link $n3 $n4 5Mb 2ms DropTail
+$ns duplex-link $n3 $n5 5Mb 2ms DropTail
+
+$ns queue-limit $n2 $n3 10
+
+$ns duplex-link-op $n0 $n2 orient right-down
+$ns duplex-link-op $n1 $n2 orient right
+$ns simplex-link-op $n2 $n3 orient down
+$ns simplex-link-op $n3 $n2 orient up
+$ns duplex-link-op $n3 $n4 orient left
+$ns duplex-link-op $n3 $n5 orient left-down
+
+$ns duplex-link-op $n2 $n3 queuePos 0.5
+
+set tcp [new Agent/TCP]
+$ns attach-agent $n0 $tcp
+set sink [new Agent/TCPSink]
+$ns attach-agent $n4 $sink
+$ns connect $tcp $sink
+
+$tcp set packet_size_ 1000
+$tcp set window_ 10000
+$tcp set fid_ 1
+
+set udp [new Agent/UDP]
+$ns attach-agent $n1 $udp
+set null [new Agent/Null]
+$ns attach-agent $n5 $null
+$ns connect $udp $null
+
+$udp set fid_ 2
+
+set ftp [new Application/FTP]
+$ftp attach-agent $tcp
+
+set cbr [new Application/Traffic/CBR]
+$cbr attach-agent $udp
+$cbr set packet_size_ 1000
+$cbr set interval_ 0.01
+
+$ns at 0.1 "$ftp start"
+$ns at 1.0 "$cbr start"
+$ns at 5.0 "$ftp stop"
+$ns at 5.0 "$cbr stop"
+
+$ns at 5.0 "finish"
+
+$ns run
